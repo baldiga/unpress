@@ -7,11 +7,14 @@
     "templates/*"
   ],
   "scripts": {
+    "start": "pnpm turbo build --filter=@unpress/shared && pnpm --filter unpress-wizard dev",
+    "wizard": "pnpm --filter unpress-wizard dev",
     "build": "turbo build",
     "dev": "turbo dev",
     "test": "turbo test",
     "lint": "turbo lint",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "postinstall": "node -e \"console.log('\\n  Unpress installed! Run: pnpm start\\n')\""
   },
   "devDependencies": {
     "turbo": "^2",
