@@ -16,6 +16,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1",
     "@unpress/shared": "workspace:*",
+    "@unpress/scan": "workspace:*",
+    "@unpress/migrate": "workspace:*",
+    "@unpress/design": "workspace:*",
+    "@unpress/deploy": "workspace:*",
+    "@unpress/copilot": "workspace:*",
     "dotenv": "^16",
     "uuid": "^11",
     "zod": "^3"
