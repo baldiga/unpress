@@ -35,8 +35,24 @@ export function Step1InstallPlugin({ level, state, onUpdate, onComplete }: Step1
     }
   };
 
+  const downloadUrl = "https://github.com/baldiga/unpress/raw/master/plugins/unpress-wp.zip";
+
   return (
     <div className="space-y-6">
+      {/* Download Button — always visible, all skill levels */}
+      <div className="bg-white rounded-2xl border-2 border-[#D4603A] p-6 text-center">
+        <p className="text-sm text-[#6b6058] mb-3">First, download the WordPress plugin:</p>
+        <a
+          href={downloadUrl}
+          download="unpress-wp.zip"
+          className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#D4603A] text-white rounded-xl font-semibold text-base hover:bg-[#b8502f] transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download unpress-wp.zip
+        </a>
+        <p className="text-xs text-[#8a7d72] mt-2">One file, ~7 KB — upload it to your WordPress site below</p>
+      </div>
+
       <InstructionCard
         level={level}
         title="📋 Instructions"
@@ -44,7 +60,7 @@ export function Step1InstallPlugin({ level, state, onUpdate, onComplete }: Step1
           "<strong>Log in to your WordPress site</strong> — go to <strong>yourdomain.com/wp-admin</strong> and sign in with your admin account",
           "In the left sidebar, hover over <strong>&quot;Plugins&quot;</strong> and click <strong>&quot;Add New Plugin&quot;</strong>",
           "Click the <strong>&quot;Upload Plugin&quot;</strong> button at the top of the page",
-          "Click <strong>&quot;Choose File&quot;</strong> and select the <strong>unpress-wp.zip</strong> file — you can download it from the <a href='https://github.com/baldiga/unpress/tree/master/plugins/unpress-wp' target='_blank' rel='noopener' class='text-[#D4603A] underline'>GitHub repo</a>",
+          "Click <strong>&quot;Choose File&quot;</strong> and select the <strong>unpress-wp.zip</strong> file you just downloaded",
           "Click <strong>&quot;Install Now&quot;</strong> and wait for it to finish — then click <strong>&quot;Activate Plugin&quot;</strong>",
         ]}
         callout={{
