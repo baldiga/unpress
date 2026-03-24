@@ -1,7 +1,14 @@
 node_modules/
 dist/
-.env
+.env*
 .unpress/
 .next/
 .turbo/
 *.tsbuildinfo
+*.log
+.claude/
+.claude-flow/
+.superpowers/
+.swarm/
+.mcp.json
+.playwright-mcp/
