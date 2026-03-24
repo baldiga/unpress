@@ -1,0 +1,23 @@
+{
+  "name": "@unpress/migrate",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@unpress/shared": "workspace:*",
+    "@sanity/client": "^7",
+    "@sanity/block-tools": "^3",
+    "jsdom": "^26"
+  },
+  "devDependencies": {
+    "typescript": "^5.7",
+    "vitest": "^3",
+    "@types/jsdom": "^21"
+  }
+}
