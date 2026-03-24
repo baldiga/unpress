@@ -287,6 +287,11 @@ A monorepo containing one orchestrator MCP server that delegates to specialized 
 - Fallback: if localhost fails, saves HTML to disk + provides file path + Playwright verifies rendering
 - Visual style: warm beige, coral accents, Inter font (matching amirbaldiga.com)
 
+**Welcome screen messaging (shown before step 1):**
+- "Why Unpress?" value proposition: speed, cost savings ($0 on free tiers), full ownership, no vendor lock-in, AI co-pilot for ongoing changes
+- **Safety promise (prominently displayed):** "Your WordPress site stays exactly as it is. Unpress reads and copies your content — it never modifies, deletes, or touches your live site. Think of it as taking a photo of your house before building a new one."
+- **What happens after migration:** concrete examples of the copilot: "After migration, you can ask Claude things like: 'Change my header color to blue', 'Add a testimonials section', 'Make the homepage more mobile-friendly' — and it just happens. Your site keeps getting better."
+
 **Phase 1: Scan (unpress-scan)**
 
 The scan phase has two components:
@@ -294,6 +299,15 @@ The scan phase has two components:
 - **`unpress-scan` (Node.js package):** Calls the plugin's REST endpoints from the user's local machine, assembles the manifest, and presents findings to the user.
 
 **Authentication:** The WP plugin generates an application password (WP 5.6+ built-in feature) scoped to read-only during activation. The plugin displays this token once in the WP admin. The user pastes it into the wizard. All API calls use HTTP Basic Auth over HTTPS.
+
+**Trust & Transparency Badge:**
+The WP plugin includes a visible trust section in the WP admin panel after installation:
+
+- **AI-Built & Verified Badge:** "This plugin was written, tested, re-tested, and security-verified by Claude Code and the Ruflo orchestration framework. Every line of code has been through automated security scanning, static analysis, and behavioral testing."
+- **Open Source Transparency:** "100% of this plugin's source code is public on GitHub. You can read every line before installing."
+- **"Verify It Yourself" prompt:** The plugin page includes a copyable prompt the user can paste into their own AI (ChatGPT, Claude, Gemini, etc.): *"I'm about to install a WordPress plugin called Unpress. Here's its source code: [GitHub link]. Please review it for security vulnerabilities, data exfiltration, and any code that modifies my WordPress database or sends data to external servers."*
+- **AI Verification Checkbox:** Before the plugin activates its REST endpoints, the user must check a confirmation box: ☐ **"I've reviewed this plugin (or had my AI/agent review it) and I'm comfortable installing it."** This is not a legal gate — it's a trust-building UX moment that makes users feel in control and signals that Unpress takes their security seriously.
+- **Read-only guarantee badge:** Prominently displayed: "🔒 READ-ONLY — This plugin cannot modify, delete, or write to your WordPress database. It only reads content for migration purposes."
 
 **Scan capabilities:** posts, pages, custom post types, ACF/custom fields, media, menus, categories, tags, taxonomies, WooCommerce products, SEO metadata (Yoast/RankMath), legal pages (privacy, terms, accessibility), tracking codes (GA, Meta Pixel, GTM), sitemap structure, active plugins list, page builder detection.
 
@@ -330,13 +344,27 @@ Produces a structured `manifest.json` (see Section 2.3 for schema). Presents fin
 
 **Required MCPs:** 21st.dev Magic, shadcn/ui MCP, mcp-icon, Playwright. **Optional:** Google Stitch, Figma Developer MCP, Storybook MCP. If an optional MCP is unavailable, the phase continues without it. If a required MCP is down, the phase pauses and retries after 30 seconds (3 attempts), then falls back to generating components from the base Next.js + shadcn template without AI component generation.
 
+**Phase 3.5: Preview & Approve (built into design→deploy handoff)**
+Before anything goes live, the user gets a full preview:
+- The generated Next.js site runs locally at `localhost:3000`
+- The wizard dashboard shows a side-by-side: **old WP site** ↔ **new site preview**
+- Playwright captures screenshots at mobile, tablet, and desktop viewports
+- The user browses the preview and can request changes: "Make the header bigger", "I don't like this font"
+- Claude iterates on the design until the user approves
+- **Only after the user clicks "Looks good — deploy!"** does the deploy phase begin
+- This is a hard gate — no automatic deployment without user approval
+
+**Fallback templates:** If the AI-generated design doesn't satisfy the user after 3 iterations, offer 5 battle-tested templates (blog, portfolio, business, landing page, documentation) as a safety net. These are pre-built, polished, and guaranteed to look good. The user's content is poured into the chosen template.
+
 **Phase 4: Deploy (unpress-deploy)**
 - Creates GitHub repository
 - Pushes generated Next.js project
 - Creates Vercel project + connects repo
 - Sets environment variables (Sanity project ID, dataset, token)
-- Triggers first deployment
-- Runs health check (Playwright navigates live site, verifies pages render)
+- Triggers first deployment to a **preview URL** (not production domain)
+- Runs health check (Playwright navigates preview URL, verifies all pages render)
+- Shows user the live preview URL: "Your site is live at preview-abc123.vercel.app — check it out!"
+- **Second approval gate:** User confirms → Vercel promotes to production / connects custom domain
 - Connects custom domain if provided
 
 **Copilot (unpress-copilot)**
@@ -370,18 +398,48 @@ The wizard runs BEFORE any migration phase. It collects all credentials and pref
 
 | Step | Title | Time Est. | What Happens |
 |------|-------|-----------|-------------|
-| 0 | Welcome + Skill Level | 30 sec | Pick novice/medium/expert |
-| 1 | Install WP Plugin | 2-3 min | Download + install unpress-wp.zip on their WP site |
-| 2 | Connect WordPress | 1 min | Enter site URL → live verification of connection |
+| 0 | Welcome + Skill Level | 30 sec | Why Unpress, safety promise, pick novice/medium/expert |
+| 1 | Install WP Plugin | 2-3 min | Download + install unpress-wp.zip, trust verification, AI review prompt |
+| 2 | Connect WordPress | 1 min | Enter site URL → live verification → scan summary + cost estimate |
 | 3 | Set Up Sanity | 3-5 min | Create Sanity account + project, paste project ID + API token |
-| 4 | Set Up GitHub | 2-3 min | Create/connect GitHub account, generate token |
-| 5 | Set Up Vercel | 2-3 min | Create/connect Vercel account, generate token |
-| 6 | Design Inspiration | 2-3 min | Paste 3-5 website URLs they love |
-| 7 | Review + Launch | 1 min | Summary of all settings → confirm → start migration |
+| 4 | Set Up GitHub + Vercel | 3-5 min | "Sign in with GitHub" → auto-links Vercel (they share auth). Reduces 2 steps to 1. Fallback: manual setup if user prefers |
+| 5 | Design Inspiration | 2-3 min | Paste 3-5 website URLs they love |
+| 6 | Review + Launch | 1 min | Summary of all settings + cost breakdown → confirm → start migration |
 
 **Total estimated time:** 15-20 minutes for novice, 5-10 for expert.
 
-### 4.2 Adaptive Detail Levels
+### 4.2 Cost Calculator
+
+After the WordPress scan (step 2), the wizard shows a cost estimate based on the detected content:
+
+```
+📊 Estimated Monthly Cost for Your New Site
+
+Based on your site: 47 posts, 12 pages, 230 images
+
+  Sanity CMS     Free tier (up to 100K API requests/mo)     $0/mo
+  Vercel         Free tier (100GB bandwidth)                 $0/mo
+  GitHub         Free tier (unlimited public repos)          $0/mo
+  ─────────────────────────────────────────────────────
+  Total                                                      $0/mo ✅
+
+💡 Your site fits comfortably within all free tiers!
+```
+
+For larger sites that exceed free tiers, show honest estimates:
+```
+⚠️ Your site (2,400 posts, 8,000 images) may exceed free tiers:
+
+  Sanity CMS     Growth plan recommended                     $15/mo
+  Vercel         Pro plan recommended                        $20/mo
+  GitHub         Free tier                                   $0/mo
+  ─────────────────────────────────────────────────────
+  Estimated total                                            $35/mo
+
+  Compare: typical WordPress hosting for this size           $30-80/mo
+```
+
+### 4.3 Adaptive Detail Levels
 
 Each step renders differently based on selected skill level:
 
@@ -389,7 +447,7 @@ Each step renders differently based on selected skill level:
 - **Medium (⚡):** Key instructions without explanations. "Create a Sanity project at sanity.io/manage, paste your project ID and token below."
 - **Expert (🚀):** Just input fields. No instructions. User knows what to do.
 
-### 4.3 Localhost Fallback
+### 4.4 Localhost Fallback
 
 If the wizard's localhost URL doesn't render:
 1. Wizard saves the current step as a standalone HTML file
@@ -397,7 +455,7 @@ If the wizard's localhost URL doesn't render:
 3. Instructions for manual launch: `npx unpress wizard`
 4. Playwright checks rendering before each step transition — catches failures early
 
-### 4.4 Post-Onboarding Dashboard
+### 4.5 Post-Onboarding Dashboard
 
 After step 7, the wizard transforms into a live dashboard showing:
 - Real-time progress through Scan → Migrate → Design → Deploy
