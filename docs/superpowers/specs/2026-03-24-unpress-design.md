@@ -327,6 +327,7 @@ Produces a structured `manifest.json` (see Section 2.3 for schema). Presents fin
 - Custom Sanity Studio desk structure mirroring WP admin layout (tabs, field order, grouping)
 - All **content** is dynamic in Sanity — every text, image, link, button label, nav item editable in Sanity
 - Global content (site title, footer, nav, tracking codes) via "Site Settings" singleton document
+- **301 redirect map generation** (see Section 5.4)
 - **WooCommerce scope:** Product catalog (name, description, price, images, categories, variants) is migrated as Sanity documents. Checkout/cart/payment functionality is NOT migrated — the user is advised to integrate Shopify Buy Button, Snipcart, or similar headless e-commerce. The scan phase warns: "WooCommerce detected. Product content will be migrated. For checkout functionality, we recommend connecting a headless e-commerce solution after migration."
 
 **Phase 3: Design (unpress-design)**
@@ -404,9 +405,28 @@ The wizard runs BEFORE any migration phase. It collects all credentials and pref
 | 3 | Set Up Sanity | 3-5 min | Create Sanity account + project, paste project ID + API token |
 | 4 | Set Up GitHub + Vercel | 3-5 min | "Sign in with GitHub" → auto-links Vercel (they share auth). Reduces 2 steps to 1. Fallback: manual setup if user prefers |
 | 5 | Design Inspiration | 2-3 min | Paste 3-5 website URLs they love |
-| 6 | Review + Launch | 1 min | Summary of all settings + cost breakdown → confirm → start migration |
+| 6 | Review + Launch | 1 min | Summary of all settings + cost breakdown + redirect count → confirm → start migration |
 
 **Total estimated time:** 15-20 minutes for novice, 5-10 for expert.
+
+### 4.6 Streamlined Account Creation (Reducing Signup Friction)
+
+The biggest conversion killer for novice users is steps 3-4: creating accounts on Sanity, GitHub, and Vercel. Three separate signups, three email verifications, three API tokens. To reduce this friction:
+
+**Primary path: "Sign in with GitHub" cascade**
+1. Step 3 (Sanity): Sanity supports "Sign in with GitHub" — if the user already has GitHub from step 4, or creates it first, Sanity signup is one click.
+2. Step 4 (GitHub + Vercel): Vercel supports "Sign in with GitHub" — creating a GitHub account gives you Vercel for free.
+3. **Reorder for novice users only:** Steps 3-4 become: "Create a GitHub account" → "Sign in to Vercel with GitHub" → "Sign in to Sanity with GitHub". One real signup, two OAuth clicks.
+
+**Novice mode UX:**
+- The wizard opens signup links in new tabs with pre-filled context where possible
+- After each OAuth signup, the wizard auto-detects the new account via a callback URL or paste-the-token flow
+- A progress checklist shows: ✅ GitHub · ✅ Vercel · ⏳ Sanity
+- If the user gets stuck on any signup, offer: "Need help? Here's a 30-second video walkthrough" (link to a short tutorial)
+
+**Expert mode:** Just three token input fields, no guidance needed.
+
+**Future v2 consideration:** A fully managed "Unpress Cloud" option where Unpress creates and manages all three accounts under a service account. The user pays one bill ($15-29/mo) and never touches Sanity/GitHub/Vercel directly. This is a monetization path, not a v1 feature.
 
 ### 4.2 Cost Calculator
 
@@ -529,6 +549,46 @@ Vercel (deployed)
 **Boundary — what is NOT dynamic:** UI chrome that is part of the framework/component library stays in code. This includes: loading spinners, form validation messages ("This field is required"), aria-labels for standard components, date formatting, pagination labels ("Next", "Previous"). These are developer concerns, not content editor concerns.
 
 Implementation: A "Site Settings" singleton document in Sanity holds all global content. Page-level content lives in its respective document type. Content is fetched at build time (ISR) with on-demand revalidation — not per-request — so the site works even if Sanity is briefly unavailable.
+
+### 5.4 SEO Preservation — 301 Redirect Map
+
+**This is critical.** Without proper redirects, migrated sites lose their Google rankings overnight. The migrate phase auto-generates a redirect map from old WordPress URLs to new Next.js URLs.
+
+**How it works:**
+
+1. **During scan:** The WP plugin exports every published URL (posts, pages, custom post types, category archives, tag archives) and its permalink structure.
+
+2. **During migrate:** For each piece of content, the migrator records the mapping:
+   ```
+   Old: /2024/03/my-blog-post/     →  New: /blog/my-blog-post
+   Old: /sample-page/              →  New: /sample-page
+   Old: /category/recipes/         →  New: /category/recipes
+   Old: /?p=42                     →  New: /blog/my-blog-post  (query param fallback)
+   ```
+
+3. **During deploy:** The redirect map is written to `next.config.js` as a `redirects()` function returning 301 permanent redirects:
+   ```typescript
+   async redirects() {
+     return [
+       { source: '/2024/03/my-blog-post/', destination: '/blog/my-blog-post', permanent: true },
+       // ... generated from manifest
+     ];
+   }
+   ```
+
+4. **Post-deploy verification:** Playwright visits a sample of old URLs on the live site and verifies they 301 to the correct new URLs.
+
+5. **Sitemap generation:** `next-sitemap` is pre-configured with all new URLs. The deploy phase submits the new sitemap URL to Google Search Console if the user provides access (optional — wizard step for expert users only).
+
+**Edge cases handled:**
+- WP date-based permalinks (`/2024/03/15/slug/`) → flat slug (`/blog/slug`)
+- WP `?p=123` query param links → resolved to their slug-based URL
+- Pagination (`/page/2/`) → Next.js pagination route
+- Category/tag archives → matching archive pages
+- Media attachment pages → redirect to the post containing the image (or 301 to homepage if orphaned)
+- Trailing slashes: matched regardless of presence
+
+**The redirect map is stored as a JSON file** at `.unpress/redirects/{session_id}.json` so it can be reviewed, edited, and re-applied. The wizard shows the redirect count: "Generated 142 redirects to preserve your Google rankings."
 
 ### 5.3 Sanity Studio UX Matching
 
