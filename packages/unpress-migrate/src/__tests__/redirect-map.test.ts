@@ -74,8 +74,8 @@ describe("redirectsToNextConfig", () => {
       { source: "/old-path/", destination: "/new-path", permanent: true },
     ];
     const config = redirectsToNextConfig(redirects);
-    expect(config).toContain("source: '/old-path/'");
-    expect(config).toContain("destination: '/new-path'");
+    expect(config).toContain('source: "/old-path/"');
+    expect(config).toContain('destination: "/new-path"');
     expect(config).toContain("permanent: true");
   });
 });

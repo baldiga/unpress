@@ -62,7 +62,7 @@ function resolveWpPermalink(structure: string, post: { slug: string; date: strin
 
 export function redirectsToNextConfig(redirects: Redirect[]): string {
   const entries = redirects.map(r =>
-    `      { source: '${r.source}', destination: '${r.destination}', permanent: ${r.permanent} },`
+    `      { source: ${JSON.stringify(r.source)}, destination: ${JSON.stringify(r.destination)}, permanent: ${r.permanent} },`
   ).join("\n");
 
   return `  async redirects() {\n    return [\n${entries}\n    ];\n  },`;

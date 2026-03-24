@@ -1,8 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { SessionManager } from "./session-manager.js";
-import { FileCheckpointManager } from "./checkpoint-manager.js";
-import type { UnpressConfig } from "@unpress/shared";
 import { WpClient, calculateCosts } from "@unpress/scan";
 import { analyzeInspirationSites } from "@unpress/design";
 import { createGithubRepo, deployToVercel } from "@unpress/deploy";
@@ -79,7 +77,7 @@ export function createUnpressServer(baseDir: string) {
 
   server.tool(
     "unpress_rollback",
-    "Rollback a migration session — delete created resources",
+    "Mark a migration session as rolled back — manual cleanup of remote resources required",
     {
       session_id: z.string(),
       sanity: z.boolean().default(false),

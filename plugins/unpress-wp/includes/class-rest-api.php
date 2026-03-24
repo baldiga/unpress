@@ -22,7 +22,7 @@ class Unpress_Rest_Api {
     }
 
     public static function check_permission(WP_REST_Request $request): bool {
-        return current_user_can('read');
+        return current_user_can('manage_options');
     }
 
     public static function get_manifest(WP_REST_Request $request): WP_REST_Response {

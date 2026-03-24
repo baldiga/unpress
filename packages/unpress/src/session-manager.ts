@@ -26,7 +26,14 @@ export class SessionManager {
     return session;
   }
 
+  private validateId(id: string): void {
+    if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+      throw new Error(`Invalid session ID: ${id}`);
+    }
+  }
+
   async load(sessionId: string): Promise<SessionSummary | null> {
+    this.validateId(sessionId);
     try {
       const data = await readFile(join(this.dir, sessionId, "summary.json"), "utf-8");
       return JSON.parse(data) as SessionSummary;

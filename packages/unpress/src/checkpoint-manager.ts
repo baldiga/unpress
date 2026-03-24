@@ -6,11 +6,19 @@ import type { Checkpoint, CheckpointManager } from "@unpress/shared";
 export class FileCheckpointManager implements CheckpointManager {
   private dir: string;
 
+  private static validateId(id: string): void {
+    if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+      throw new Error(`Invalid identifier: ${id}`);
+    }
+  }
+
   constructor(baseDir: string, private sessionId: string) {
+    FileCheckpointManager.validateId(sessionId);
     this.dir = join(baseDir, ".unpress", "checkpoints", sessionId);
   }
 
   async save(phase: string, step: string, state: Record<string, unknown>): Promise<void> {
+    FileCheckpointManager.validateId(phase);
     await mkdir(this.dir, { recursive: true });
     const checkpoint: Checkpoint = {
       id: uuid(),
@@ -27,6 +35,7 @@ export class FileCheckpointManager implements CheckpointManager {
   }
 
   async load(phase: string): Promise<Checkpoint | null> {
+    FileCheckpointManager.validateId(phase);
     try {
       const data = await readFile(join(this.dir, `${phase}-latest.json`), "utf-8");
       return JSON.parse(data) as Checkpoint;
